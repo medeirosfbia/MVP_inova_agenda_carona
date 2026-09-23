@@ -11,21 +11,22 @@
         <div class="container">
             <h1>🚗 Carona Bairro</h1>
             <p>Caronas do Ponto ao Centro</p>
+            <button id="btnDriverMode" class="btn-driver-mode">Sou Motorista</button>
         </div>
     </header>
-
+    
     <main class="container">
         <h2 class="section-title">Horários Disponíveis Hoje</h2>
         <div class="rides-list" id="ridesList">
             <!-- Cards serão inseridos via JavaScript -->
         </div>
     </main>
-
+    
     <footer>
         <p>© 2024 Carona Bairro - Comunidade Conectada</p>
     </footer>
-
-    <!-- Modal de Reserva -->
+    
+    <!-- Modal de Reserva (Passageiro) -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <div class="modal-header">
@@ -62,6 +63,91 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Cadastro (Motorista) -->
+    <div class="modal-overlay" id="driverModalOverlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Cadastrar Carona</h3>
+                <button class="modal-close" id="driverModalClose">&times;</button>
+            </div>
+            <form id="driverForm">
+                <div class="form-group">
+                    <label class="form-label" for="driverName">Seu Nome</label>
+                    <input 
+                        type="text" 
+                        id="driverName" 
+                        class="form-input" 
+                        placeholder="Digite seu nome"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="driverPhone">Seu WhatsApp</label>
+                    <input 
+                        type="tel" 
+                        id="driverPhone" 
+                        class="form-input" 
+                        placeholder="(00) 00000-0000"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="driverCar">Modelo do Carro</label>
+                    <input 
+                        type="text" 
+                        id="driverCar" 
+                        class="form-input" 
+                        placeholder="Ex: Onix Prata"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="driverTime">Horário de Saída</label>
+                    <input 
+                        type="time" 
+                        id="driverTime" 
+                        class="form-input" 
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="driverPrice">Valor da Carona (R$)</label>
+                    <input 
+                        type="number" 
+                        id="driverPrice" 
+                        class="form-input" 
+                        placeholder="5.00"
+                        step="0.50"
+                        min="1"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="driverSeats">Quantidade de Vagas</label>
+                    <input 
+                        type="number" 
+                        id="driverSeats" 
+                        class="form-input" 
+                        placeholder="4"
+                        min="1"
+                        max="7"
+                        required
+                    >
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelDriverBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cadastrar Carona</button>
                 </div>
             </form>
         </div>

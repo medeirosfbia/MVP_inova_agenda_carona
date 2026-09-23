@@ -3,10 +3,11 @@
 // ============================================
 
 // Número do WhatsApp do motorista (formato internacional sem +)
-const DRIVER_WHATSAPP = "5511999999999";
+// Este será o número padrão se nenhum outro for especificado no cadastro
+const DEFAULT_DRIVER_WHATSAPP = "5511999999999";
 
-// Lista de horários disponíveis
-const RIDES = [
+// Lista de horários disponíveis (pode ser editada ou carregada do localStorage)
+let RIDES = [
     {
         id: 1,
         time: "06:30",
@@ -14,7 +15,8 @@ const RIDES = [
         car: "Honda Civic - Prata",
         price: "R$ 5,00",
         totalSeats: 4,
-        availableSeats: 2
+        availableSeats: 2,
+        driverPhone: DEFAULT_DRIVER_WHATSAPP
     },
     {
         id: 2,
@@ -23,7 +25,8 @@ const RIDES = [
         car: "Toyota Corolla - Branco",
         price: "R$ 5,00",
         totalSeats: 4,
-        availableSeats: 3
+        availableSeats: 3,
+        driverPhone: DEFAULT_DRIVER_WHATSAPP
     },
     {
         id: 3,
@@ -32,9 +35,29 @@ const RIDES = [
         car: "Volkswagen Gol - Azul",
         price: "R$ 5,00",
         totalSeats: 4,
-        availableSeats: 1
+        availableSeats: 1,
+        driverPhone: DEFAULT_DRIVER_WHATSAPP
     }
 ];
+
+// ID para novos cadastros
+let nextRideId = 4;
+
+// Carregar caronas do localStorage (se existir)
+function loadRidesFromStorage() {
+    const storedRides = localStorage.getItem('caronaBairro_rides');
+    if (storedRides) {
+        RIDES = JSON.parse(storedRides);
+        // Encontrar o maior ID para continuar a sequência
+        const maxId = RIDES.reduce((max, ride) => Math.max(max, ride.id), 0);
+        nextRideId = maxId + 1;
+    }
+}
+
+// Salvar caronas no localStorage
+function saveRidesToStorage() {
+    localStorage.setItem('caronaBairro_rides', JSON.stringify(RIDES));
+}
 
 // ============================================
 // LÓGICA DO APLICATIVO
@@ -102,28 +125,69 @@ function renderRides() {
     });
 }
 
-// Abrir modal
+// Abrir modal de reserva
 function openModal(rideId) {
     const ride = RIDES.find(r => r.id === rideId);
     if (!ride) return;
 
     document.getElementById('selectedRideId').value = ride.id;
     document.getElementById('selectedRideTime').value = ride.time;
-    document.getElementById('selectedDriverPhone').value = DRIVER_WHATSAPP;
+    document.getElementById('selectedDriverPhone').value = ride.driverPhone || DEFAULT_DRIVER_WHATSAPP;
     
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('passengerName').focus();
 }
 
-// Fechar modal
+// Fechar modal de reserva
 function closeModal() {
     document.getElementById('modalOverlay').classList.remove('active');
     document.getElementById('reservationForm').reset();
 }
 
+// Abrir modal do motorista
+function openDriverModal() {
+    document.getElementById('driverModalOverlay').style.display = 'flex';
+    document.getElementById('driverName').focus();
+}
+
+// Fechar modal do motorista
+function closeDriverModal() {
+    document.getElementById('driverModalOverlay').style.display = 'none';
+    document.getElementById('driverForm').reset();
+}
+
 // Formatr WhatsApp para link
 function formatWhatsAppNumber(number) {
     return number.replace(/\D/g, '');
+}
+
+// Formatar preço para exibição
+function formatPrice(value) {
+    return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
+}
+
+// Adicionar nova carona
+function addNewRide(driverData) {
+    const newRide = {
+        id: nextRideId++,
+        time: driverData.time,
+        driver: driverData.name,
+        car: driverData.car,
+        price: formatPrice(driverData.price),
+        totalSeats: parseInt(driverData.seats),
+        availableSeats: parseInt(driverData.seats),
+        driverPhone: formatWhatsAppNumber(driverData.phone)
+    };
+    
+    // Adicionar à lista e ordenar por horário
+    RIDES.push(newRide);
+    RIDES.sort((a, b) => a.time.localeCompare(b.time));
+    
+    // Salvar no localStorage
+    saveRidesToStorage();
+    
+    // Re-renderizar
+    renderRides();
 }
 
 // Enviar reserva para WhatsApp
@@ -145,9 +209,17 @@ function sendToWhatsApp(name, whatsapp, time, driverPhone) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Carregar caronas salvas
+    loadRidesFromStorage();
     renderRides();
 
-    // Fechar modal
+    // Botão "Sou Motorista"
+    const btnDriverMode = document.getElementById('btnDriverMode');
+    if (btnDriverMode) {
+        btnDriverMode.addEventListener('click', openDriverModal);
+    }
+
+    // Fechar modal de reserva
     document.getElementById('modalClose').addEventListener('click', closeModal);
     document.getElementById('cancelBtn').addEventListener('click', closeModal);
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
@@ -156,7 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Submit do formulário
+    // Fechar modal do motorista
+    document.getElementById('driverModalClose').addEventListener('click', closeDriverModal);
+    document.getElementById('cancelDriverBtn').addEventListener('click', closeDriverModal);
+    document.getElementById('driverModalOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('driverModalOverlay')) {
+            closeDriverModal();
+        }
+    });
+
+    // Submit do formulário de reserva
     document.getElementById('reservationForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -170,8 +251,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Máscara para WhatsApp
+    // Submit do formulário do motorista
+    document.getElementById('driverForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const driverData = {
+            name: document.getElementById('driverName').value.trim(),
+            phone: document.getElementById('driverPhone').value.trim(),
+            car: document.getElementById('driverCar').value.trim(),
+            time: document.getElementById('driverTime').value,
+            price: parseFloat(document.getElementById('driverPrice').value),
+            seats: parseInt(document.getElementById('driverSeats').value)
+        };
+
+        if (driverData.name && driverData.phone && driverData.car && driverData.time && driverData.price && driverData.seats) {
+            addNewRide(driverData);
+            closeDriverModal();
+            alert('Carona cadastrada com sucesso! 🚗');
+        }
+    });
+
+    // Máscara para WhatsApp (passageiro)
     document.getElementById('passengerWhatsApp').addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        
+        if (value.length >= 10) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+        } else if (value.length >= 6) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2)}-${value.slice(6)}`;
+        } else if (value.length >= 2) {
+            value = `(${value.slice(0, 2)})${value.slice(2)}`;
+        }
+        
+        e.target.value = value;
+    });
+
+    // Máscara para WhatsApp (motorista)
+    document.getElementById('driverPhone').addEventListener('input', (e) => {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 11) value = value.slice(0, 11);
         
@@ -187,5 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Expor função openModal globalmente
+// Expor funções globalmente
 window.openModal = openModal;
+window.closeModal = closeModal;
+window.openDriverModal = openDriverModal;
+window.closeDriverModal = closeDriverModal;

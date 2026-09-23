@@ -53,6 +53,35 @@ header p {
     font-weight: 400;
 }
 
+/* Botão Motorista */
+.btn-driver-mode {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-driver-mode:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+    .btn-driver-mode {
+        position: static;
+        margin-top: 12px;
+        display: inline-block;
+    }
+}
+
 /* Main Content */
 main {
     padding: 24px 0;
