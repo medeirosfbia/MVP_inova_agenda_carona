@@ -1,1 +1,5 @@
-(empty)
+node_modules/
+*.log
+data/
+config.browser.js
+supabase-config.js

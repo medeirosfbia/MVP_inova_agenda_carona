@@ -10,22 +10,27 @@
     <header>
         <div class="container">
             <h1>🚗 Carona Bairro</h1>
-            <p>Caronas do Ponto ao Centro</p>
-            <button id="btnDriverMode" class="btn-driver-mode">Sou Motorista</button>
+            <p>Caronas do Bairro ao Centro</p>
+            <button id="btnDriverMode" class="btn-driver-mode">Área do Motorista</button>
         </div>
     </header>
-    
-    <main class="container">
-        <h2 class="section-title">Horários Disponíveis Hoje</h2>
+
+    <!-- ============ TELA DO USUÁRIO (PASSAGEIRO) ============ -->
+    <main class="container" id="passengerView">
+        <h2 class="section-title">Caronas Disponíveis</h2>
+        <p class="section-subtitle">Reserve sua vaga e fale direto no WhatsApp do motorista.</p>
         <div class="rides-list" id="ridesList">
             <!-- Cards serão inseridos via JavaScript -->
         </div>
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <p>Nenhuma carona cadastrada ainda. Volte mais tarde!</p>
+        </div>
     </main>
-    
+
     <footer>
         <p>© 2024 Carona Bairro - Comunidade Conectada</p>
     </footer>
-    
+
     <!-- Modal de Reserva (Passageiro) -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
@@ -35,124 +40,170 @@
             </div>
             <form id="reservationForm">
                 <input type="hidden" id="selectedRideId">
-                <input type="hidden" id="selectedRideTime">
-                <input type="hidden" id="selectedDriverPhone">
-                
+                <p class="modal-ride-summary" id="rideSummary"></p>
+
                 <div class="form-group">
                     <label class="form-label" for="passengerName">Seu Nome</label>
-                    <input 
-                        type="text" 
-                        id="passengerName" 
-                        class="form-input" 
+                    <input
+                        type="text"
+                        id="passengerName"
+                        class="form-input"
                         placeholder="Digite seu nome completo"
                         required
                     >
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="passengerWhatsApp">Seu WhatsApp</label>
-                    <input 
-                        type="tel" 
-                        id="passengerWhatsApp" 
-                        class="form-input" 
+                    <input
+                        type="tel"
+                        id="passengerWhatsApp"
+                        class="form-input"
                         placeholder="(00) 00000-0000"
                         required
                     >
                 </div>
-                
+
+                <p class="form-error" id="bookError" style="display: none;"></p>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+                    <button type="submit" class="btn btn-primary" id="bookSubmitBtn">Falar no WhatsApp</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Cadastro (Motorista) -->
-    <div class="modal-overlay" id="driverModalOverlay" style="display: none;">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Carona</h3>
-                <button class="modal-close" id="driverModalClose">&times;</button>
-            </div>
-            <form id="driverForm">
-                <div class="form-group">
-                    <label class="form-label" for="driverName">Seu Nome</label>
-                    <input 
-                        type="text" 
-                        id="driverName" 
-                        class="form-input" 
-                        placeholder="Digite seu nome"
-                        required
-                    >
+    <!-- ============ TELA DO MOTORISTA ============ -->
+    <div class="driver-view" id="driverView" style="display: none;">
+        <div class="container">
+
+            <!-- Painel não logado: login / cadastro -->
+            <section id="authPanel">
+                <h2 class="section-title">Área do Motorista</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" id="tabLogin" data-tab="login">Entrar</button>
+                    <button class="tab-btn" id="tabRegister" data-tab="register">Criar Conta</button>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="driverPhone">Seu WhatsApp</label>
-                    <input 
-                        type="tel" 
-                        id="driverPhone" 
-                        class="form-input" 
-                        placeholder="(00) 00000-0000"
-                        required
-                    >
+
+                <!-- Login -->
+                <form id="loginForm" class="card-form">
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">Seu E-mail</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="voce@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Senha</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Sua senha" required>
+                    </div>
+                    <p class="form-error" id="loginError" style="display: none;"></p>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="backToPassengerBtn1">Voltar</button>
+                        <button type="submit" class="btn btn-primary">Entrar</button>
+                    </div>
+                </form>
+
+                <!-- Cadastro -->
+                <form id="registerForm" class="card-form" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="regName">Seu Nome</label>
+                        <input type="text" id="regName" class="form-input" placeholder="Digite seu nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regEmail">Seu E-mail (login)</label>
+                        <input type="email" id="regEmail" class="form-input" placeholder="voce@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regPhone">Seu WhatsApp</label>
+                        <input type="tel" id="regPhone" class="form-input" placeholder="(00) 00000-0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regCar">Modelo do Carro</label>
+                        <input type="text" id="regCar" class="form-input" placeholder="Ex: Onix Prata" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regPassword">Crie uma Senha</label>
+                        <input type="password" id="regPassword" class="form-input" placeholder="Mínimo 4 caracteres" minlength="4" required>
+                    </div>
+                    <p class="form-error" id="registerError" style="display: none;"></p>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="backToPassengerBtn2">Voltar</button>
+                        <button type="submit" class="btn btn-primary">Criar Conta</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Painel logado: criar agendamento + minhas viagens -->
+            <section id="dashboardPanel" style="display: none;">
+                <div class="dashboard-header">
+                    <h2 class="section-title">Olá, <span id="driverGreetingName"></span> 👋</h2>
+                    <button class="btn btn-secondary btn-sm" id="logoutBtn">Sair</button>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="driverCar">Modelo do Carro</label>
-                    <input 
-                        type="text" 
-                        id="driverCar" 
-                        class="form-input" 
-                        placeholder="Ex: Onix Prata"
-                        required
-                    >
+
+                <!-- Criar agendamento de viagem -->
+                <form id="scheduleForm" class="card-form">
+                    <h3 class="subsection-title">➕ Novo Agendamento de Viagem</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="schedFrom">Origem</label>
+                            <input type="text" id="schedFrom" class="form-input" placeholder="Ex: Bairro Centro" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="schedTo">Destino</label>
+                            <input type="text" id="schedTo" class="form-input" placeholder="Ex: Trabalho - Av. Paulista" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedTime">Horário de Saída</label>
+                        <input type="time" id="schedTime" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dias da Semana</label>
+                        <div class="days-picker" id="daysPicker"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="schedPrice">Valor (R$)</label>
+                            <input type="number" id="schedPrice" class="form-input" placeholder="5.00" step="0.50" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="schedSeats">Vagas</label>
+                            <input type="number" id="schedSeats" class="form-input" placeholder="4" min="1" max="7" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedNotes">Observações (opcional)</label>
+                        <input type="text" id="schedNotes" class="form-input" placeholder="Ex: Ponto de encontro na praça">
+                    </div>
+                    <p class="form-error" id="scheduleError" style="display: none;"></p>
+                    <button type="submit" class="btn btn-primary btn-block">Salvar Agendamento</button>
+                </form>
+
+                <!-- Minhas viagens -->
+                <h3 class="subsection-title">📋 Minhas Viagens</h3>
+                <div class="rides-list" id="myRidesList"></div>
+                <div class="empty-state" id="myRidesEmpty" style="display: none;">
+                    <p>Você ainda não tem viagens agendadas.</p>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="driverTime">Horário de Saída</label>
-                    <input 
-                        type="time" 
-                        id="driverTime" 
-                        class="form-input" 
-                        required
-                    >
+
+                <!-- Reservas recebidas -->
+                <h3 class="subsection-title">📩 Reservas Recebidas</h3>
+                <div class="bookings-list" id="bookingsList"></div>
+                <div class="empty-state" id="bookingsEmpty" style="display: none;">
+                    <p>Nenhuma reserva ainda.</p>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="driverPrice">Valor da Carona (R$)</label>
-                    <input 
-                        type="number" 
-                        id="driverPrice" 
-                        class="form-input" 
-                        placeholder="5.00"
-                        step="0.50"
-                        min="1"
-                        required
-                    >
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="driverSeats">Quantidade de Vagas</label>
-                    <input 
-                        type="number" 
-                        id="driverSeats" 
-                        class="form-input" 
-                        placeholder="4"
-                        min="1"
-                        max="7"
-                        required
-                    >
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="cancelDriverBtn">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Cadastrar Carona</button>
-                </div>
-            </form>
+            </section>
         </div>
     </div>
 
-    <script src="javascript.js"></script>
+    <!-- SDK do Supabase (browser) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuração: cole aqui a URL e a chave ANON do seu projeto Supabase
+         (Supabase Dashboard > Project Settings > API). Rode `npm run build-config`
+         para gerar este arquivo a partir de supabase-config.js -->
+    <script src="config.browser.js"></script>
+
+    <script src="app.js"></script>
 </body>
 </html>
