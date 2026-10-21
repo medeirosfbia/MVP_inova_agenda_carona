@@ -1,112 +1,66 @@
-# 🚗 Carona Bairro - MVP de Carona Comunitária
+# 🚗 Carona Bairro (Supabase)
 
-Uma aplicação web simples, moderna e otimizada para mobile que conecta moradores de um bairro a motoristas que fazem trajetos regulares (ex: do bairro ao centro). O foco é facilitar a reserva de vagas via WhatsApp sem necessidade de back-end complexo ou login de usuários.
+MVP de carona comunitária com **duas telas**:
 
-## ✨ Funcionalidades
+- **Usuário/passageiro**: vê as caronas disponíveis, reserva uma vaga e é levado
+  **diretamente para o WhatsApp do motorista** (mensagem pré-preenchida).
+- **Motorista**: cria conta/login, agenda viagens (origem, destino, horário, dias,
+  valor, vagas, observações), cancela/reativa/exclui e vê as reservas recebidas.
 
-### Para Passageiros
-- **Visualização de Horários:** Lista clara de caronas disponíveis com horário, motorista, carro e valor.
-- **Indicador de Vagas:** Visualização em tempo real de assentos livres (com cores para poucas vagas ou lotado).
-- **Reserva Rápida:** Formulário simples (Nome e WhatsApp) que abre diretamente uma conversa no WhatsApp do motorista com a mensagem pré-preenchida.
-- **Design Mobile-First:** Interface pensada primariamente para uso em celulares.
+O banco de dados e o sistema de usuários/login são do **Supabase** (Postgres + Auth + RLS).
+Não há mais servidor de API próprio — o site fala direto com o Supabase.
 
-### Para Motoristas (Novo!)
-- **Cadastro de Carona:** Painel acessível na própria página para cadastrar nova viagem.
-- **Dados Personalizados:** O motorista define seu nome, telefone, modelo do carro, horário, valor e número de vagas.
-- **Contato Direto:** Cada card de carona direciona o passageiro especificamente para o WhatsApp daquele motorista.
+## Precisa de API Key?
 
-## 🛠️ Tecnologias Utilizadas
+**Sim.** Você precisa de 2 valores do seu projeto Supabase (grátis em [supabase.com](https://supabase.com)):
 
-- **HTML5:** Estrutura semântica.
-- **CSS3:** Estilização responsiva, variáveis CSS e layout moderno (sem frameworks pesados).
-- **JavaScript (Vanilla):** Lógica de renderização, manipulação do DOM e persistência local (`localStorage`).
-- **WhatsApp API:** Redirecionamento inteligente via link `wa.me`.
+| Valor | Onde encontrar | É secreto? |
+|---|---|---|
+| **Project URL** | Dashboard → Project Settings → API | Não (pública) |
+| **anon public key** | mesma tela | Não — é pública por design; a segurança vem das políticas RLS |
+| ~~service_role key~~ | — | **Não é necessária** no frontend. Nunca a coloque no site. |
 
-## 🚀 Como Hospedar no Vercel
+## Setup (3 passos)
 
-Este projeto é estático e extremamente leve, perfeito para hospedagem gratuita no Vercel.
+1. **Crie o projeto no Supabase** e cole todo o conteúdo de [`supabase-schema.sql`](./supabase-schema.sql)
+   no **SQL Editor** e execute (Run). Isso cria as tabelas `driver_profiles`, `rides`,
+   `bookings`, as políticas de segurança (RLS) e a função `book_ride` (reserva atômica sem overbooking).
 
-1. **Crie um repositório no GitHub** com os arquivos deste projeto (`index.html`, `style.css`, `javascript.js`).
-2. **Acesse [Vercel.com](https://vercel.com)** e faça login.
-3. Clique em **"Add New Project"**.
-4. Importe o repositório do GitHub que você acabou de criar.
-5. Clique em **"Deploy"**.
+2. **Configure as chaves** editando `supabase-config.js` (ou via variáveis de ambiente
+   `SUPABASE_URL` / `SUPABASE_ANON_KEY`).
 
-Pronto! Em segundos seu site estará no ar com HTTPS automático.
+3. **Rode o site**:
+   ```bash
+   npm install
+   npm start        # gera config.browser.js a partir do supabase-config.js e sobe em http://localhost:3000
+   ```
 
-## ⚙️ Configuração Inicial
+> Dica: em Authentication → Providers → Email você pode desativar "Confirm email"
+> para o motorista entrar imediatamente após criar a conta (sem confirmar o e-mail).
 
-Embora o sistema permita cadastro dinâmico de motoristas via interface, você pode definir dados iniciais ou configurar o comportamento padrão editando o arquivo `javascript.js`.
-
-Abra o arquivo `javascript.js` e localize a seção de configuração:
-
-```javascript
-// Configurações Globais
-const CONFIG = {
-  // Se não houver nenhuma carona cadastrada, estas serão as padrão
-  defaultRides: [
-    {
-      id: 1,
-      driverName: "João Silva",
-      driverPhone: "5511999999999", // Formato internacional sem + ou traços
-      carModel: "Toyota Corolla",
-      time: "06:30",
-      price: 5.00,
-      totalSeats: 4,
-      availableSeats: 2
-    },
-    // ... mais carros
-  ]
-};
-```
-
-> **Nota sobre Telefones:** Para o redirecionamento do WhatsApp funcionar corretamente, os números devem estar no formato internacional apenas com dígitos (ex: `5511999998888` para Brasil + DDD + Número).
-
-## 💾 Persistência de Dados
-
-Atualmente, o aplicativo utiliza o **`localStorage`** do navegador para salvar as caronas cadastradas pelos motoristas.
-- **Vantagem:** Não requer banco de dados, servidor ou configuração complexa. Funciona imediatamente.
-- **Limitação:** Os dados ficam salvos apenas no dispositivo/navegador de quem cadastrou. Se o motorista limpar o cache do navegador, os dados somem.
-- **Uso Ideal:** Este MVP é perfeito para comunidades pequenas onde o administrador cadastra as rotas iniciais e os usuários apenas consomem a informação, ou para testes de validação de ideia.
-
-Para um produto final escalável onde todos veem as mesmas rotas independentemente do dispositivo, seria necessário integrar com um banco de dados (como Firebase ou Supabase).
-
-## 🎨 Personalização Visual
-
-As cores e fontes podem ser alteradas facilmente no início do arquivo `style.css` através de variáveis CSS:
-
-```css
-:root {
-  --primary-color: #10b981; /* Verde principal */
-  --secondary-color: #064e3b; /* Verde escuro */
-  --accent-color: #f59e0b; /* Laranja para alertas */
-  --bg-color: #f3f4f6;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-}
-```
-
-## 📄 Estrutura de Arquivos
+## Estrutura
 
 ```
-/
-├── index.html        # Estrutura da página
-├── style.css         # Estilos e responsividade
-├── javascript.js     # Lógica de negócios e interação
-└── README.md         # Documentação do projeto
+index.html            # telas do usuário e do motorista
+app.js                # lógica do frontend (usa o SDK @supabase/supabase-js via CDN)
+style.css             # estilos
+server.js             # servidor estático (apenas serve os arquivos)
+supabase-schema.sql   # cole no SQL Editor do Supabase (tabelas + RLS + RPC book_ride)
+supabase-config.js    # suas chaves do Supabase (gitignored)
+scripts/build-config.js  # gera config.browser.js (gitignored)
 ```
 
-## 🤝 Contribuição
+## Como funciona a segurança (RLS)
 
-Sinta-se à vontade para fazer fork e melhorar este projeto. Sugestões de melhorias futuras:
-- Integração com Firebase para banco de dados em tempo real.
-- Sistema de avaliação de motoristas.
-- Filtro por dias da semana (Segunda, Quarta, Sexta).
+- Passageiros (mesmo deslogados) só leem viagens `active = true`.
+- Motoristas só criam/editam/excluem viagens cujo `driver_id` seja o próprio `auth.uid()`.
+- A reserva é feita pela função SQL `book_ride` (`security definer`), que trava a linha
+  (`SELECT ... FOR UPDATE`) e impede vender mais vagas do que existem.
+- O link gerado usa `https://wa.me/<numero-do-motorista>?text=<mensagem>` — o usuário
+  cai direto na conversa do WhatsApp do motorista.
 
-## 📫 Licença
+## Hospedagem
 
-Este projeto é open source e pode ser utilizado livremente para fins educacionais e comerciais.
-
----
-
-Desenvolvido com ❤️ para fortalecer a comunidade do bairro.
+Como não há backend próprio, o site pode ser hospedado gratuitamente em qualquer
+servidor estático (Vercel, Netlify, GitHub Pages...). Basta gerar o `config.browser.js`
+localmente antes do deploy (ou colar as duas constantes dentro dele manualmente).
