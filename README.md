@@ -26,13 +26,15 @@ Não há mais servidor de API próprio — o site fala direto com o Supabase.
    no **SQL Editor** e execute (Run). Isso cria as tabelas `driver_profiles`, `rides`,
    `bookings`, as políticas de segurança (RLS) e a função `book_ride` (reserva atômica sem overbooking).
 
-2. **Configure as chaves** editando `supabase-config.js` (ou via variáveis de ambiente
-   `SUPABASE_URL` / `SUPABASE_ANON_KEY`).
+2. **Configure as chaves no `.env`** (arquivo escondido do git):
+   ```bash
+   cp .env.example .env    # e preencha SUPABASE_URL e SUPABASE_ANON_KEY
+   ```
 
-3. **Rode o site**:
+3. **Rode o site localmente**:
    ```bash
    npm install
-   npm start        # gera config.browser.js a partir do supabase-config.js e sobe em http://localhost:3000
+   npm start        # lê o .env, gera public/config.browser.js e sobe em http://localhost:3000
    ```
 
 > Dica: em Authentication → Providers → Email você pode desativar "Confirm email"
@@ -41,13 +43,15 @@ Não há mais servidor de API próprio — o site fala direto com o Supabase.
 ## Estrutura
 
 ```
-index.html            # telas do usuário e do motorista
-app.js                # lógica do frontend (usa o SDK @supabase/supabase-js via CDN)
-style.css             # estilos
-server.js             # servidor estático (apenas serve os arquivos)
-supabase-schema.sql   # cole no SQL Editor do Supabase (tabelas + RLS + RPC book_ride)
-supabase-config.js    # suas chaves do Supabase (gitignored)
-scripts/build-config.js  # gera config.browser.js (gitignored)
+public/index.html       # telas do usuário e do motorista
+public/app.js           # lógica do frontend (usa o SDK @supabase/supabase-js via CDN)
+public/style.css        # estilos
+.env                    # suas chaves do Supabase (gitignored — nunca commitar)
+.env.example            # modelo de variáveis
+server.js               # servidor estático local (apenas serve public/)
+scripts/build.js        # lê .env/variáveis da Vercel e gera public/config.browser.js
+vercel.json             # buildCommand + outputDirectory para deploy na Vercel
+supabase-schema.sql     # cole no SQL Editor do Supabase (tabelas + RLS + RPC book_ride)
 ```
 
 ## Como funciona a segurança (RLS)
@@ -59,8 +63,30 @@ scripts/build-config.js  # gera config.browser.js (gitignored)
 - O link gerado usa `https://wa.me/<numero-do-motorista>?text=<mensagem>` — o usuário
   cai direto na conversa do WhatsApp do motorista.
 
-## Hospedagem
+## Deploy na Vercel (passo a passo)
 
-Como não há backend próprio, o site pode ser hospedado gratuitamente em qualquer
-servidor estático (Vercel, Netlify, GitHub Pages...). Basta gerar o `config.browser.js`
-localmente antes do deploy (ou colar as duas constantes dentro dele manualmente).
+O projeto já contém o `vercel.json` com o build correto, então basta:
+
+1. **Suba o código para o GitHub** (o `.env` NÃO vai junto — ele é ignorado pelo git):
+   ```bash
+   git add .
+   git commit -m "chore: chaves do Supabase via .env / env vars da Vercel"
+   git push
+   ```
+2. Na Vercel, abra seu projeto → **Settings → Environment Variables** e adicione
+   (para as ambientes *Production*, *Preview* e *Development*):
+   | Name | Value |
+   |---|---|
+   | `SUPABASE_URL` | a URL do projeto (Dashboard Supabase → Project Settings → API) |
+   | `SUPABASE_ANON_KEY` | a chave **anon public** |
+3. Vá em **Deployments → Redeploy** (ou faça um novo push). No build, o comando
+   `node scripts/build.js` roda com essas variáveis e injeta os valores no
+   `public/config.browser.js` de dentro do deploy — nada de segredo no repositório.
+4. Pronto: cada push passa a rebuildar automaticamente com as variáveis da Vercel.
+
+> Alternativa via terminal: `npm i -g vercel && vercel env add SUPABASE_URL production`
+> (cole o valor), idem para `SUPABASE_ANON_KEY`, e depois `vercel --prod`.
+
+⚠️ Lembrete: a **anon key** é embutida no bundle público por natureza (é assim que
+apps 100% frontend funcionam no Supabase) — quem protege seus dados são as políticas
+RLS do `supabase-schema.sql`. A **service_role key** jamais deve aparecer aqui.

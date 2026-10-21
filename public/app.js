@@ -10,9 +10,9 @@ let currentDriver = null; // { id, name, whatsapp, car } do motorista logado
 
 // ---------- Cliente Supabase ----------
 // window.SUPABASE_URL / window.SUPABASE_ANON_KEY vêm de config.browser.js
-// (gerado por `npm run build-config` a partir de supabase-config.js)
+// (gerado pelo build a partir do .env local ou das Environment Variables da Vercel)
 if (!window.SUPABASE_URL || !window.supabase) {
-    alert('Configure o Supabase: edite supabase-config.js e rode "npm run build-config".');
+    alert('Configure o Supabase: copie .env.example para .env, preencha e rode "npm run build" (ou adicione as variáveis na Vercel).');
 }
 const sb = window.supabase
     ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
